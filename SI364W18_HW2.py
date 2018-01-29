@@ -30,46 +30,96 @@ app.config['SECRET_KEY'] = 'hardtoguessstring'
 ###### FORMS #######
 ####################
 
+class Artistform(FlaskForm):
+    artist = StringField("Enter Artist", validators=[Required()])
+    submit = SubmitField('Submit')
 
+class AlbumEntryForm(FlaskForm):
+    album = StringField("Enter the name of an album:", validators=[Required()])
+    radio = RadioField("How much do you like this album?", choices=[(1,1),(2,2),(3,3)], validators=[Required()])
+    submit = SubmitField('Submit')
 
 
 ####################
 ###### ROUTES ######
 ####################
 
+###### ✨HELLO WORLD ######
 @app.route('/')
 def hello_world():
     return 'Hello World!'
-
 
 @app.route('/user/<name>')
 def hello_user(name):
     return '<h1>Hello {0}<h1>'.format(name)
 
+ ## ✨ (1) rendering the template that asks the user to type in an artist to search for.
 @app.route('/artistform')
-def get_artist_form():
+def artist_form():
 	return(render_template('artistform.html'))
 
+## ✨ (2) fomats the information the user inputted into an API request to iTunes
 @app.route('/artistinfo')
-def get_artist_links():
+def artist_info():
     if request.method == 'GET':
         result = request.args
-        temp = {}
-        temp['term'] = result.get('artist')
-        resp = requests.get('https://itunes.apple.com/search?', params = temp)
+        x = {}
+        x['term'] = result.get('artist')
+        resp = requests.get('https://itunes.apple.com/search?', params = x)
         data = json.loads(resp.text)
         return render_template('artist_info.html',objects = data['results'])
 
-'''
+## ✨Example hyperlinks a user can enter
 @app.route('/artistlinks')
 def get_artist_links():
 	return(render_template('artist_links.html'))
 
+## ✨ (3) This is what happens after the API Request is completed. 
+@app.route('/specific/song/<artist_name>')
+def Artists_Display(artist_name):
+    if request.method == 'GET':
+        result = request.args
+        params = {} 
+        params['term'] = artist_name
+        params['limit'] = 3
+        resp = requests.get('https://itunes.apple.com/search?',params =params)
+        data = json.loads(resp.text)
+        return render_template('specific_artist.html',results=data['results'])
+
+
+
+## Album
+
+@app.route('/specific/song/<album_entry>')
+def artistentry():
+    return render_template('album_entry.html')
+
+@app.route('/album_data.html')
+def artistdata():
+    return render_template('album_data.html')
+
+
 @app.route('/album_entry')
 def get_album_entry():
-	return(render_template('album_entry.html'))
+    simpleForm = AlbumEntryForm()
+    return(render_template('album_entry.html', form= simpleForm))
 
-@app.route('/album_result')
+
+@app.route('/album_result', methods = ['POST','GET'])
+def album_result():
+    form = AlbumEntryForm(request.form)
+    if request.method == 'POST':
+        s = request.form['album']
+        r = request.form['radio']
+        results = {}
+        results['s'] = s
+        results['r'] = results
+        return render_template("album_data.html",results=results, form=form)
+    flash('All fields are required!')
+    return redirect(url_for('album_entry'))
+
+'''
+@app.route('/album_data')
 def get_album_result():
 	return(render_template('album_entry.html'))
 '''
