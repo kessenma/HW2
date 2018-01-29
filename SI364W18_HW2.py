@@ -109,10 +109,10 @@ def get_album_entry():
 def album_result():
     form = AlbumEntryForm(request.form)
     if request.method == 'POST':
-        s = request.form['album']
+        abc = request.form['album']
         r = request.form['radio']
         results = {}
-        results['s'] = s
+        results['abc'] = abc
         results['r'] = results
         return render_template("album_data.html",results=results, form=form)
     flash('All fields are required!')
